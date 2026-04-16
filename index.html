@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DripJobs – Appointment Schedule Modal · Exact Time Entry</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: #f4f5f7;
+  color: #1e1e2d;
+  font-size: 14px;
+  min-height: 100vh;
+  padding: 0; margin: 0;
+}
+
+/* ── Page header ── */
+.page-header {
+  background: #1e1e2d;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.page-header-title { color: #fff; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.page-header-meta  { color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 2px; }
+.badge-ticket {
+  background: #7C3AED; color: #fff;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: 4px; letter-spacing: 0.02em;
+}
+
+/* ── Scenario bar ── */
+.scenario-bar {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 28px;
+  display: flex; align-items: center; gap: 0;
+}
+.scenario-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #9ca3af;
+  padding: 12px 10px 12px 0; margin-right: 4px;
+}
+.scenario-tab {
+  padding: 12px 18px; font-size: 13px; font-weight: 600;
+  color: #6b7280; border-bottom: 3px solid transparent;
+  cursor: pointer; white-space: nowrap; transition: color 0.15s;
+}
+.scenario-tab:hover { color: #7C3AED; }
+.scenario-tab.active { color: #7C3AED; border-bottom-color: #7C3AED; }
+
+/* ── Demo stage ── */
+.demo-stage {
+  display: flex; gap: 28px; padding: 28px;
+  align-items: flex-start; justify-content: center; flex-wrap: wrap;
+}
+
+/* ── Modal card ── */
+.modal-card {
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+  width: 384px; overflow: hidden; flex-shrink: 0;
+}
+.modal-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px 12px; border-bottom: 1px solid #f0f0f4;
+}
+.modal-title-text { font-size: 15px; font-weight: 700; color: #1e1e2d; }
+.modal-close-btn {
+  background: none; border: none; color: #9ca3af;
+  font-size: 16px; padding: 0 2px; cursor: pointer; line-height: 1;
+}
+.modal-view-deal { font-size: 12px; color: #7C3AED; font-weight: 600; cursor: pointer; text-decoration: none; }
+
+.modal-body-scroll { max-height: 78vh; overflow-y: auto; padding: 0 18px 16px; }
+.modal-body-scroll::-webkit-scrollbar { width: 5px; }
+.modal-body-scroll::-webkit-scrollbar-track { background: transparent; }
+.modal-body-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+/* ── Section header ── */
+.modal-section-header {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #9ca3af;
+  margin: 14px 0 8px; padding-top: 4px;
+  border-top: 1px solid #f0f0f4;
+  display: flex; align-items: center; gap: 6px;
+}
+.modal-section-header i { color: #7C3AED; font-size: 11px; }
+.modal-section-header.first { border-top: none; margin-top: 10px; }
+
+/* ── Form elements ── */
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-group-dj { margin-bottom: 10px; }
+.form-group-dj label {
+  font-size: 12px; font-weight: 600; color: #374151;
+  margin-bottom: 4px; display: block;
+}
+.form-control-dj {
+  width: 100%; height: 36px;
+  border: 1px solid #d1d5db; border-radius: 6px;
+  padding: 0 10px; font-size: 13px;
+  font-family: 'Nunito', sans-serif; color: #1e1e2d;
+  background: #fff; -webkit-appearance: none; appearance: none;
+  transition: border-color 0.15s; outline: none;
+}
+.form-control-dj:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.08);
+}
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: ''; position: absolute; right: 11px; top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent; border-top-color: #6b7280;
+  pointer-events: none;
+}
+.select-wrap select { padding-right: 28px; }
+
+/* Color select */
+.color-select-wrap select { background: #7C3AED; color: #fff; font-weight: 700; }
+.color-select-wrap .select-wrap::after { border-top-color: #fff; }
+
+/* Date input */
+.date-input-wrap { position: relative; }
+.date-input-wrap .date-icon {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%); color: #7C3AED; font-size: 13px; pointer-events: none;
+}
+.date-input-wrap input { padding-left: 30px; }
+
+/* ── Split Hr / Min time fields ── */
+
+.time-split-labels {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 3px;
+}
+.time-part-sublabel {
+  width: 52px; text-align: center;
+  font-size: 10px; font-weight: 700; color: #9ca3af;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.time-colon-spacer {
+  width: 14px; flex-shrink: 0;
+}
+.time-split-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.time-part-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.time-part-input-row {
+  display: flex; align-items: center;
+  border: 1px solid #d1d5db; border-radius: 6px;
+  background: #fff; overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 52px;
+}
+.time-part-input-row.focused {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.08);
+}
+.time-part-input-row.invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+}
+.time-part-input {
+  flex: 1; min-width: 0; height: 34px; border: none; outline: none;
+  padding: 0 0 0 4px; font-size: 14px; font-weight: 700;
+  font-family: 'Nunito', sans-serif; color: #1e1e2d; background: transparent;
+  text-align: center;
+}
+.time-part-input::placeholder { color: #c4c9d4; font-weight: 400; font-size: 13px; }
+.time-part-toggle {
+  width: 20px; height: 34px; border: none; border-left: 1px solid #f0f0f4;
+  background: transparent; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  color: #6b7280; font-size: 9px; padding: 0; flex-shrink: 0;
+  transition: color 0.15s;
+}
+.time-part-toggle:hover { color: #7C3AED; }
+
+.time-colon {
+  font-size: 18px; font-weight: 800; color: #374151;
+  width: 14px; text-align: center;
+  flex-shrink: 0; -webkit-user-select: none; user-select: none; line-height: 1;
+}
+
+/* Dropdown panel */
+.time-part-panel {
+  position: absolute; top: calc(100% + 3px); left: 0; min-width: 72px;
+  background: #fff; border: 1px solid #d1d5db; border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12); z-index: 300; display: none; overflow: hidden;
+}
+.time-part-panel.open { display: block; }
+
+.time-part-option-list { max-height: 180px; overflow-y: auto; padding: 4px 0; }
+.time-part-option-list::-webkit-scrollbar { width: 4px; }
+.time-part-option-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+.time-part-option {
+  padding: 7px 0; font-size: 13px; font-weight: 600; color: #374151;
+  cursor: pointer; transition: background 0.1s; text-align: center;
+}
+.time-part-option:hover { background: #f5f3ff; color: #7C3AED; }
+.time-part-option.selected { background: #7C3AED; color: #fff; }
+.time-part-option-hint {
+  padding: 5px 8px; font-size: 10px; color: #9ca3af;
+  border-bottom: 1px solid #f0f0f4; text-align: center;
+}
+
+/* AM/PM dropdown */
+.ampm-select-wrap { position: relative; flex-shrink: 0; }
+.ampm-display {
+  height: 36px; width: 58px;
+  border: 1px solid #d1d5db; border-radius: 6px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 8px; cursor: pointer;
+  font-size: 12px; font-weight: 800; font-family: 'Nunito', sans-serif;
+  background: #f9fafb; color: #6b7280;
+  transition: border-color 0.15s, background 0.12s;
+  -webkit-user-select: none; user-select: none;
+}
+.ampm-display:hover { border-color: #a78bfa; }
+.ampm-display.is-am { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.ampm-display.is-pm { background: #f5f3ff; color: #7C3AED; border-color: #ddd6fe; }
+.ampm-display i { font-size: 9px; margin-left: 2px; }
+.ampm-panel {
+  position: absolute; top: calc(100% + 3px); left: 0; width: 58px;
+  background: #fff; border: 1px solid #d1d5db; border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12); z-index: 400; display: none; overflow: hidden;
+}
+.ampm-panel.open { display: block; }
+.ampm-option {
+  padding: 9px 0; text-align: center; font-size: 13px; font-weight: 700;
+  font-family: 'Nunito', sans-serif; cursor: pointer; color: #374151;
+  transition: background 0.1s;
+}
+.ampm-option:hover { background: #f5f3ff; color: #7C3AED; }
+.ampm-option.opt-am.active { background: #eff6ff; color: #1d4ed8; }
+.ampm-option.opt-pm.active { background: #f5f3ff; color: #7C3AED; }
+
+/* Validation error */
+.time-error-msg {
+  font-size: 11px; color: #dc2626; font-weight: 600;
+  margin-top: 4px; display: none; align-items: center; gap: 4px;
+}
+.time-error-msg.show { display: flex; }
+
+/* Exact badge */
+.exact-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700;
+  color: #059669; background: #d1fae5;
+  border-radius: 4px; padding: 1px 6px;
+  margin-top: 4px;
+}
+.exact-badge.hide { display: none; }
+.time-increment-hint { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+
+/* ── Toggles ── */
+.toggle-row {
+  display: flex; align-items: center;
+  justify-content: space-between; padding: 6px 0;
+}
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle-pill {
+  width: 36px; height: 20px; border-radius: 10px;
+  background: #d1d5db; position: relative; cursor: pointer; transition: background 0.2s;
+}
+.toggle-pill.on { background: #7C3AED; }
+.toggle-pill::after {
+  content: ''; position: absolute; width: 14px; height: 14px;
+  background: #fff; border-radius: 50%; top: 3px; left: 3px;
+  transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-pill.on::after { left: 19px; }
+.toggle-type-label { font-size: 12px; font-weight: 700; color: #374151; }
+
+/* ── Customer request ── */
+.customer-request-box {
+  border: 1.5px dashed #f59e0b;
+  border-radius: 8px; background: #fffbeb; padding: 12px; margin-top: 4px;
+}
+.customer-request-title {
+  font-size: 11px; font-weight: 800; color: #b45309;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 5px; margin-bottom: 10px;
+}
+.availability-box {
+  border: 1.5px dashed #f59e0b; border-radius: 6px;
+  background: #fff; padding: 10px; margin-bottom: 10px;
+}
+.availability-title {
+  font-size: 11px; font-weight: 800; color: #b45309;
+  letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px;
+}
+.tip-banner {
+  background: #d1fae5; border-radius: 5px; padding: 7px 10px;
+  font-size: 12px; color: #065f46;
+  display: flex; align-items: flex-start; gap: 6px; margin-bottom: 10px;
+}
+.tip-banner i { color: #059669; margin-top: 1px; flex-shrink: 0; }
+.pref-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 0; border-bottom: 1px solid #fde68a; font-size: 13px;
+}
+.pref-row:last-child { border-bottom: none; }
+.pref-label { color: #78350f; font-weight: 600; }
+.pref-value { color: #1e1e2d; font-weight: 700; flex: 1; margin: 0 8px; }
+.use-btn {
+  background: #fffbeb; border: 1px solid #f59e0b;
+  color: #92400e; font-size: 12px; font-weight: 700;
+  padding: 3px 10px; border-radius: 5px; cursor: pointer; white-space: nowrap;
+}
+.use-btn:hover { background: #fef3c7; }
+.meta-grid {
+  display: grid; grid-template-columns: auto 1fr;
+  gap: 4px 10px; font-size: 13px;
+}
+.meta-key { color: #6b7280; font-weight: 600; white-space: nowrap; }
+.meta-val { color: #1e1e2d; }
+.meta-val a { color: #7C3AED; text-decoration: none; font-weight: 600; }
+
+/* ── Notify bars ── */
+.notify-bar {
+  border-radius: 6px; padding: 9px 12px; font-size: 12px;
+  display: flex; align-items: flex-start; gap: 7px; margin-top: 6px;
+}
+.notify-bar i { margin-top: 1px; flex-shrink: 0; }
+.notify-bar.green  { background: #d1fae5; border-left: 3px solid #059669; color: #065f46; }
+.notify-bar.yellow { background: #fef3c7; border-left: 3px solid #d97706; color: #92400e; }
+.notify-bar.blue   { background: #eff6ff; border-left: 3px solid #2563eb; color: #1e40af; }
+.notify-bar.red    { background: #fef2f2; border-left: 3px solid #dc2626; color: #991b1b; }
+
+/* ── Communication section ── */
+.sms-preview-box {
+  background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;
+  padding: 10px 12px; font-size: 12px; color: #374151;
+  line-height: 1.6; position: relative;
+}
+.sms-edit-icon {
+  position: absolute; right: 8px; bottom: 8px;
+  color: #9ca3af; cursor: pointer; font-size: 12px;
+}
+.template-hint {
+  background: #ede9fe; border-radius: 5px; padding: 7px 10px;
+  font-size: 12px; color: #5b21b6; margin-top: 6px;
+}
+.drip-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px;
+}
+
+/* ── Modal footer ── */
+.modal-footer-bar {
+  padding: 12px 18px; border-top: 1px solid #f0f0f4;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.btn-archive-dj {
+  background: none; color: #6b7280; border: 1px solid #d1d5db;
+  border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 600;
+  font-family: 'Nunito', sans-serif; cursor: pointer;
+}
+.btn-ghost-dj {
+  background: none; color: #6b7280; border: 1px solid #d1d5db;
+  border-radius: 7px; padding: 8px 14px; font-size: 13px; font-weight: 600;
+  font-family: 'Nunito', sans-serif; cursor: pointer;
+}
+.btn-primary-dj {
+  background: #7C3AED; color: #fff; border: none;
+  border-radius: 7px; padding: 8px 20px; font-size: 13px; font-weight: 700;
+  font-family: 'Nunito', sans-serif; cursor: pointer; transition: background 0.15s;
+}
+.btn-primary-dj:hover { background: #6d28d9; }
+.footer-btns { display: flex; gap: 8px; align-items: center; }
+
+/* ── Annotation panel ── */
+.annotation-panel { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; }
+.annot-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); overflow: hidden; }
+.annot-header {
+  padding: 10px 14px 8px; border-bottom: 1px solid #f0f0f4;
+  display: flex; align-items: center; gap: 8px;
+}
+.annot-icon {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0;
+}
+.ai-purple { background: #ede9fe; color: #7C3AED; }
+.ai-green  { background: #d1fae5; color: #059669; }
+.ai-blue   { background: #dbeafe; color: #2563eb; }
+.ai-yellow { background: #fef3c7; color: #d97706; }
+.ai-red    { background: #fef2f2; color: #dc2626; }
+.annot-title { font-size: 13px; font-weight: 700; color: #1e1e2d; }
+.annot-body  { padding: 10px 14px 12px; }
+.annot-rule  { font-size: 12px; color: #374151; line-height: 1.6; margin-bottom: 7px; }
+.annot-rule:last-child { margin-bottom: 0; }
+.annot-rule strong { color: #1e1e2d; }
+.pill {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 1px 7px; border-radius: 4px; margin-right: 4px;
+}
+.pill-new   { background: #ede9fe; color: #7C3AED; }
+.pill-fixed { background: #d1fae5; color: #059669; }
+.pill-edge  { background: #fef3c7; color: #d97706; }
+
+.ba-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.ba-col { border-radius: 7px; padding: 8px 10px; }
+.ba-col.before { background: #fef2f2; border: 1px solid #fecaca; }
+.ba-col.after  { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.ba-col-label  { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+.ba-col.before .ba-col-label { color: #dc2626; }
+.ba-col.after  .ba-col-label { color: #059669; }
+.ba-col-value  { font-size: 12px; font-weight: 700; color: #1e1e2d; }
+.ba-col-sub    { font-size: 11px; color: #6b7280; margin-top: 2px; line-height: 1.4; }
+
+.scenario-panel { display: none; }
+.scenario-panel.active { display: contents; }
+
+code {
+  font-size: 11px; background: #f3f4f6; padding: 1px 4px;
+  border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace;
+}
+.edge-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+.edge-table th { background: #f9fafb; font-weight: 700; color: #374151; padding: 5px 8px; text-align: left; border: 1px solid #e5e7eb; }
+.edge-table td { padding: 5px 8px; border: 1px solid #e5e7eb; color: #374151; vertical-align: top; }
+.edge-table tr:nth-child(even) td { background: #fafafa; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Appointment Schedule Modal — Split Hr / Min Time Entry</div>
+    <div class="page-header-meta">Prototype · Interact with the Hr and Min fields to explore all scenarios</div>
+  </div>
+  <span class="badge-ticket">BR-1 through BR-6</span>
+</div>
+
+<!-- ── Scenario tabs ── -->
+<div class="scenario-bar">
+  <span class="scenario-label">Scenario:</span>
+  <div class="scenario-tab active"  onclick="setScenario('type')">1 · Type Exact Time</div>
+  <div class="scenario-tab"         onclick="setScenario('browse')">2 · Browse 5-Min Dropdown</div>
+  <div class="scenario-tab"         onclick="setScenario('invalid')">3 · Invalid Entry</div>
+  <div class="scenario-tab"         onclick="setScenario('clear')">4 · Clear &amp; Save</div>
+</div>
+
+<!-- ── Stage ── -->
+<div class="demo-stage">
+
+  <!-- ===== MODAL ===== -->
+  <div class="modal-card">
+    <div class="modal-header-bar">
+      <span class="modal-title-text">Schedule</span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <a class="modal-view-deal" href="#">View Deal</a>
+        <button type="button" class="modal-close-btn" aria-label="Close" onclick="setScenario(currentScenario)">×</button>
+      </div>
+    </div>
+
+    <div class="modal-body-scroll">
+
+      <!-- EVENT DETAILS -->
+      <div class="modal-section-header first">
+        <i class="fas fa-calendar-alt"></i> Event Details
+      </div>
+      <div class="form-row-2">
+        <div class="form-group-dj">
+          <label>Title</label>
+          <input class="form-control-dj" type="text" title="Title" value="Allen Lead">
+        </div>
+        <div class="form-group-dj">
+          <label>Calendar Color</label>
+          <div class="select-wrap color-select-wrap">
+            <select class="form-control-dj" title="Calendar Color" style="background:#7C3AED;color:#fff;font-weight:700;">
+              <option>Purple</option><option>Blue</option><option>Green</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group-dj">
+          <label>Event Duration</label>
+          <div class="select-wrap">
+            <select class="form-control-dj" title="Event Duration">
+              <option>30 min</option><option>1 hr</option><option>2 hr</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group-dj">
+          <label>Salesperson</label>
+          <div class="select-wrap">
+            <select class="form-control-dj" title="Salesperson"><option>Jeremy Harrison</option></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- REMINDERS -->
+      <div class="modal-section-header">
+        <i class="fas fa-bell"></i> Reminders
+      </div>
+      <div class="toggle-row" style="padding-bottom:4px;">
+        <span></span>
+        <div class="toggle-wrap">
+          <span class="toggle-type-label">Email</span>
+          <div class="toggle-pill" onclick="this.classList.toggle('on')"></div>
+          <span class="toggle-type-label">SMS</span>
+          <div class="toggle-pill on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+
+      <!-- SCHEDULE APPOINTMENT -->
+      <div class="modal-section-header">
+        <i class="fas fa-clock"></i> Schedule Appointment
+      </div>
+
+      <div class="form-group-dj">
+        <label>Date</label>
+        <div class="date-input-wrap">
+          <i class="fas fa-calendar-alt date-icon"></i>
+          <input class="form-control-dj" type="text" id="apptDate" title="Date" value="04/06/2026">
+        </div>
+      </div>
+
+      <div class="form-group-dj">
+        <label>Time</label>
+        <!-- Split Hr / Min / AM/PM -->
+        <div id="timeSplitWrap">
+          <!-- Label row -->
+          <div class="time-split-labels">
+            <span class="time-part-sublabel">Hr</span>
+            <span class="time-colon-spacer"></span>
+            <span class="time-part-sublabel">Min</span>
+          </div>
+          <!-- Input row -->
+          <div class="time-split-row">
+            <!-- Hour -->
+            <div class="time-part-wrap" id="hrWrap">
+              <div class="time-part-input-row" id="hrInputRow">
+                <input
+                  class="time-part-input" id="hrInput"
+                  type="text" placeholder="--" maxlength="2"
+                  autocomplete="off"
+                  oninput="onHrInput()"
+                  onfocus="onHrFocus()"
+                  onblur="onHrBlur()"
+                  onclick="onHrClick()"
+                  onkeydown="onHrKeydown(event)"
+                >
+                <button type="button" class="time-part-toggle" tabindex="-1" aria-label="Toggle hour picker" onmousedown="toggleHrPanel(event)">
+                  <i class="fas fa-chevron-down" id="hrChevron"></i>
+                </button>
+              </div>
+              <div class="time-part-panel" id="hrPanel">
+                <div class="time-part-option-list" id="hrOptionList"></div>
+              </div>
+            </div>
+            <span class="time-colon">:</span>
+            <!-- Minute -->
+            <div class="time-part-wrap" id="minWrap">
+              <div class="time-part-input-row" id="minInputRow">
+                <input
+                  class="time-part-input" id="minInput"
+                  type="text" placeholder="--" maxlength="2"
+                  autocomplete="off"
+                  oninput="onMinInput()"
+                  onfocus="onMinFocus()"
+                  onblur="onMinBlur()"
+                  onclick="onMinClick()"
+                  onkeydown="onMinKeydown(event)"
+                >
+                <button type="button" class="time-part-toggle" tabindex="-1" aria-label="Toggle minute picker" onmousedown="toggleMinPanel(event)">
+                  <i class="fas fa-chevron-down" id="minChevron"></i>
+                </button>
+              </div>
+              <div class="time-part-panel" id="minPanel">
+                <div class="time-part-option-list" id="minOptionList"></div>
+              </div>
+            </div>
+            <!-- AM/PM dropdown -->
+            <div class="ampm-select-wrap" id="ampmWrap">
+              <div class="ampm-display is-am" id="ampmDisplay" onclick="toggleAmpmPanel()">
+                <span id="ampmText">AM</span>
+                <i class="fas fa-chevron-down" id="ampmChevron"></i>
+              </div>
+              <div class="ampm-panel" id="ampmPanel">
+                <div class="ampm-option opt-am active" onmousedown="selectAmpm('AM')">AM</div>
+                <div class="ampm-option opt-pm"        onmousedown="selectAmpm('PM')">PM</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="time-error-msg" id="timeErrorMsg">
+          <i class="fas fa-exclamation-circle"></i>
+          <span id="timeErrorText">Enter a valid time</span>
+        </div>
+        <div class="exact-badge hide" id="exactBadge">
+          <i class="fas fa-check-circle"></i> Exact time accepted
+        </div>
+        <div class="time-increment-hint" id="incrementHint">
+          Min dropdown: 5-min steps · or type any (0–59)
+        </div>
+      </div>
+
+      <!-- All-day warning -->
+      <div class="notify-bar yellow" id="allDayWarning" style="display:none;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>No time entered. This appointment will sync to Google Calendar as an <strong>all-day event</strong>. Add a time to create a timed event.</span>
+      </div>
+
+      <!-- Exact-time confirmation -->
+      <div class="notify-bar green" id="exactTimeConfirm" style="display:none;">
+        <i class="fas fa-check-circle"></i>
+        <span>Exact time <strong id="confirmedTimeText">10:29 AM</strong> will be saved and synced to Google Calendar as a <strong>timed event</strong>.</span>
+      </div>
+
+      <!-- Validation error banner -->
+      <div class="notify-bar red" id="validationBanner" style="display:none;">
+        <i class="fas fa-times-circle"></i>
+        <span><strong>Invalid time.</strong> Hr must be 1–12 and Min must be 00–59.</span>
+      </div>
+
+      <!-- CUSTOMER REQUEST -->
+      <div class="modal-section-header">
+        <i class="fas fa-user"></i> Customer Request
+      </div>
+      <div class="customer-request-box">
+        <div class="customer-request-title"><i class="fas fa-lock"></i> Customer's Preferred Availability</div>
+        <div class="availability-box">
+          <div class="availability-title"><i class="fas fa-bolt" style="color:#f59e0b;"></i> Customer's Preferred Availability</div>
+          <div class="tip-banner">
+            <i class="fas fa-info-circle"></i>
+            Use the customer's preferred dates to minimize back-and-forth scheduling.
+          </div>
+          <div class="pref-row">
+            <span class="pref-label">Preferred Date:</span>
+            <span class="pref-value">4/20/2026</span>
+            <button type="button" class="use-btn" onclick="setDate('04/20/2026')">✓ Use</button>
+          </div>
+          <div class="pref-row">
+            <span class="pref-label">Alternate Date:</span>
+            <span class="pref-value">4/24/2026</span>
+            <button type="button" class="use-btn" onclick="setDate('04/24/2026')">✓ Use</button>
+          </div>
+          <div class="pref-row">
+            <span class="pref-label">Time of Day:</span>
+            <span class="pref-value">Anytime</span>
+          </div>
+        </div>
+        <div class="meta-grid">
+          <span class="meta-key">Booking Form</span><span class="meta-val">Sparrow's Nest</span>
+          <span class="meta-key">Name</span>       <span class="meta-val"><a href="#">Allen Lead</a></span>
+          <span class="meta-key">Notes</span>      <span class="meta-val">Allen Lead</span>
+          <span class="meta-key">Details</span>    <span class="meta-val">This Allen booking my 3rd Deal and changing my address again.</span>
+          <span class="meta-key">Phone</span>      <span class="meta-val"><a href="#">(333) 555-6473</a></span>
+          <span class="meta-key">Address</span>    <span class="meta-val"><a href="#">4 New Lead Four, Hernando FL 34442</a></span>
+          <span class="meta-key">Lead Source</span><span class="meta-val">Skywriting</span>
+        </div>
+      </div>
+
+      <!-- COMMUNICATION -->
+      <div class="modal-section-header">
+        <i class="fas fa-comments"></i> Communication
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-wrap">
+          <span class="toggle-type-label">Send Email</span>
+          <div class="toggle-pill on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-wrap">
+          <span class="toggle-type-label">Send SMS</span>
+          <div class="toggle-pill on" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <div class="drip-row" style="margin-top:8px;">
+        <span style="font-weight:600;color:#374151;font-size:13px;">Drip Sequence <i class="fas fa-question-circle" style="color:#9ca3af;font-size:11px;"></i></span>
+        <div class="toggle-pill" onclick="this.classList.toggle('on')" style="margin-left:auto;"></div>
+        <span style="font-weight:600;color:#9ca3af;font-size:12px;">Disable Drips</span>
+      </div>
+      <div class="form-group-dj" style="margin-bottom:8px;">
+        <div class="select-wrap">
+          <select class="form-control-dj" title="Drip Sequence"><option>Appointment Information</option></select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+        <span style="font-size:11px;color:#9ca3af;">Next In Sequence: Appointment Confirmation</span>
+      </div>
+      <div class="form-group-dj">
+        <label>SMS Message</label>
+        <div class="sms-preview-box">
+          Hi {first-name}! We've scheduled your On-Site Estimate for {appointment-date} at {appointment-time} at {company-name} located with {assigned-user}. Please let us know if you have any questions or need to make changes! Thank you - {company-name}
+          <span class="sms-edit-icon"><i class="fas fa-pencil-alt"></i></span>
+        </div>
+        <div class="template-hint">
+          Email Template: To edit your email template please visit your Company Settings and click on the Templates tab.
+        </div>
+      </div>
+      <div class="notify-bar blue" style="margin-top:8px;">
+        <i class="fas fa-info-circle"></i>
+        <span>You're about to schedule an on-site estimate for this customer. Once it's scheduled, the Deal will move to the <strong>Estimate Scheduled</strong> stage.</span>
+      </div>
+
+    </div><!-- /modal-body-scroll -->
+
+    <div class="modal-footer-bar">
+      <button type="button" class="btn-archive-dj"><i class="fas fa-archive"></i> Archive Appointment</button>
+      <div class="footer-btns">
+        <button type="button" class="btn-ghost-dj">Close</button>
+        <button type="button" class="btn-primary-dj" id="scheduleBtn" onclick="handleSchedule()">Schedule</button>
+      </div>
+    </div>
+  </div><!-- /modal-card -->
+
+  <!-- ===== ANNOTATION PANEL ===== -->
+  <div class="annotation-panel">
+
+    <!-- Scenario 1 -->
+    <div class="scenario-panel active" id="annot-type">
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-purple"><i class="fas fa-keyboard"></i></div>
+          <span class="annot-title">BR-1 · Split Hr / Min Entry</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            <span class="pill pill-new">NEW</span>
+            Time is entered as two separate fields: <strong>Hr</strong> (1–12) and <strong>Min</strong> (0–59). Each field supports both direct typing <em>and</em> dropdown selection.
+          </div>
+          <div class="annot-rule">
+            Typing <strong>29</strong> in the Min field is accepted exactly — it's not forced to a 5-minute boundary. The green badge and confirmation confirm the exact value is saved.
+          </div>
+          <div class="ba-row">
+            <div class="ba-col before">
+              <div class="ba-col-label">Before</div>
+              <div class="ba-col-value">Single dropdown</div>
+              <div class="ba-col-sub">Must pick preset. 10:29 AM unavailable.</div>
+            </div>
+            <div class="ba-col after">
+              <div class="ba-col-label">After</div>
+              <div class="ba-col-value">Hr + Min inputs</div>
+              <div class="ba-col-sub">Type 10 in Hr, 29 in Min → saved exactly.</div>
+            </div>
+          </div>
+          <div class="annot-rule" style="margin-top:10px;">
+            <strong>Try it:</strong> Type <code>10</code> in Hr, then <code>29</code> in Min. Watch the green exact-time confirmation appear.
+          </div>
+        </div>
+      </div>
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-blue"><i class="fab fa-google"></i></div>
+          <span class="annot-title">BR-4 · Google Calendar Timed Event</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            Any appointment saved with a specific Hr and Min syncs to Google Calendar as a <strong>timed event</strong>, not an all-day event.
+          </div>
+          <div class="annot-rule">
+            The all-day event bug was a downstream consequence of the time not resolving. With split fields, the value is always unambiguous.
+          </div>
+        </div>
+      </div>
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-blue"><i class="fas fa-bell"></i></div>
+          <span class="annot-title">⚠️ Comms Impact — QA Required</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            The SMS/email token <code>{appointment-time}</code> resolves from the stored time. QA must confirm that <strong>10:29 AM</strong> (not 7:00 AM) appears in outbound notifications.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenario 2 -->
+    <div class="scenario-panel" id="annot-browse">
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-purple"><i class="fas fa-list"></i></div>
+          <span class="annot-title">BR-2 · 5-Minute Increment Dropdown (Min)</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            <span class="pill pill-new">NEW</span>
+            The <strong>Min</strong> dropdown shows options in <strong>5-minute increments</strong>: 00, 05, 10, 15 … 55. The <strong>Hr</strong> dropdown shows 1–12.
+          </div>
+          <div class="ba-row">
+            <div class="ba-col before">
+              <div class="ba-col-label">Before</div>
+              <div class="ba-col-value">15-min steps</div>
+              <div class="ba-col-sub">Single field: 7:00, 7:15, 7:30…</div>
+            </div>
+            <div class="ba-col after">
+              <div class="ba-col-label">After</div>
+              <div class="ba-col-value">5-min steps</div>
+              <div class="ba-col-sub">Min field: 00, 05, 10, 15…</div>
+            </div>
+          </div>
+          <div class="annot-rule" style="margin-top:10px;">
+            <strong>Try it:</strong> Click the ▾ on Hr to pick an hour, then click ▾ on Min to select a minute. The AM/PM button toggles between AM and PM.
+          </div>
+        </div>
+      </div>
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-green"><i class="fas fa-check"></i></div>
+          <span class="annot-title">BR-3 · No Default Override</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            <span class="pill pill-fixed">FIXED</span>
+            The placeholder <code>--</code> only appears before the user has interacted with each field. Once a value is entered, the system preserves it through save. <strong>7:00 AM never reasserts itself.</strong>
+          </div>
+        </div>
+      </div>
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-blue"><i class="fas fa-globe"></i></div>
+          <span class="annot-title">BR-5 · Timezone Integrity</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            Times entered are stored and synced in the company's configured timezone. The UI passes the composed value through faithfully.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenario 3 -->
+    <div class="scenario-panel" id="annot-invalid">
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-red"><i class="fas fa-exclamation-triangle"></i></div>
+          <span class="annot-title">Edge Case · Invalid Entry</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            <span class="pill pill-edge">EDGE CASE</span>
+            If a user types an out-of-range Hr (e.g. <code>99</code>) or Min (e.g. <code>99</code>), the offending field shows a <strong>red invalid border</strong> and the Schedule button is blocked.
+          </div>
+          <div class="annot-rule">
+            The error surfaces <strong>on blur</strong> and persists until a valid value is entered. It does not fire while the user is still typing.
+          </div>
+          <div class="annot-rule">
+            <strong>Try it:</strong> The Hr field is pre-filled with <code>99</code> (invalid). Click Schedule — it is blocked. Fix it to <code>10</code> and try again.
+          </div>
+        </div>
+      </div>
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-yellow"><i class="fas fa-info-circle"></i></div>
+          <span class="annot-title">Valid Input Ranges</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">Each field validates independently on blur:</div>
+          <table class="edge-table">
+            <thead><tr><th>Field</th><th>Valid range</th><th>Result</th></tr></thead>
+            <tbody>
+              <tr><td>Hr</td><td>1 – 12</td><td>Saved as-is</td></tr>
+              <tr><td>Min</td><td>0 – 59</td><td>Zero-padded (e.g. 9 → 09)</td></tr>
+              <tr><td>Min (5-min)</td><td>00, 05, 10 … 55</td><td>Standard increment</td></tr>
+              <tr><td>Min (exact)</td><td>01–04, 06–09 …</td><td>Exact badge shown</td></tr>
+              <tr><td>AM/PM</td><td>AM or PM</td><td>Toggle button</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenario 4 -->
+    <div class="scenario-panel" id="annot-clear">
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-yellow"><i class="fas fa-eraser"></i></div>
+          <span class="annot-title">Edge Case · Clear Field &amp; Save</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            <span class="pill pill-edge">EDGE CASE</span>
+            If Hr or Min is empty and the user attempts to save, <strong>7:00 AM is not silently applied</strong>.
+          </div>
+          <div class="annot-rule">
+            Instead the modal shows a warning that the appointment will sync as an <strong>all-day Google Calendar event</strong>, giving the user a chance to add a time before confirming.
+          </div>
+          <div class="ba-row">
+            <div class="ba-col before">
+              <div class="ba-col-label">Before (Bug)</div>
+              <div class="ba-col-value">7:00 AM</div>
+              <div class="ba-col-sub">Silent fallback → wrong timed event on GCal</div>
+            </div>
+            <div class="ba-col after">
+              <div class="ba-col-label">After (Fixed)</div>
+              <div class="ba-col-value">No time</div>
+              <div class="ba-col-sub">Warning shown → all-day event with intent</div>
+            </div>
+          </div>
+          <div class="annot-rule" style="margin-top:10px;">
+            <strong>Try it:</strong> Hr and Min are empty. Click Schedule — the all-day event warning appears.
+          </div>
+        </div>
+      </div>
+      <div class="annot-card">
+        <div class="annot-header">
+          <div class="annot-icon ai-green"><i class="fas fa-check-circle"></i></div>
+          <span class="annot-title">BR-6 · All Appointment Types</span>
+        </div>
+        <div class="annot-body">
+          <div class="annot-rule">
+            The split Hr/Min time field is the shared component used across <strong>all appointment types</strong>: on-site estimates, job appointments, warranty work, and any others. All inherit the same behavior.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /annotation-panel -->
+
+</div><!-- /demo-stage -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+var currentScenario = 'type';
+var hrValue   = '';    // '1'..'12' or ''
+var minValue  = '';    // '00'..'59' or ''
+var ampmValue = 'AM';
+var hrPanelOpen  = false;
+var minPanelOpen = false;
+
+// ── Options ────────────────────────────────────────────────────
+var HR_OPTIONS  = ['1','2','3','4','5','6','7','8','9','10','11','12'];
+var MIN_OPTIONS = ['00','05','10','15','20','25','30','35','40','45','50','55'];
+
+// ── AM/PM dropdown ─────────────────────────────────────────────
+var ampmPanelOpen = false;
+
+function openAmpmPanel() {
+  if (ampmPanelOpen) return;
+  ampmPanelOpen = true;
+  document.getElementById('ampmPanel').classList.add('open');
+  document.getElementById('ampmChevron').className = 'fas fa-chevron-up';
+}
+
+function closeAmpmPanel() {
+  if (!ampmPanelOpen) return;
+  ampmPanelOpen = false;
+  document.getElementById('ampmPanel').classList.remove('open');
+  document.getElementById('ampmChevron').className = 'fas fa-chevron-down';
+}
+
+function toggleAmpmPanel() {
+  if (ampmPanelOpen) { closeAmpmPanel(); } else { openAmpmPanel(); }
+}
+
+function selectAmpm(val) {
+  ampmValue = val;
+  document.getElementById('ampmText').textContent = val;
+  document.getElementById('ampmDisplay').className = 'ampm-display ' + (val === 'AM' ? 'is-am' : 'is-pm');
+  // Update active state on options
+  var opts = document.querySelectorAll('.ampm-option');
+  opts.forEach(function(o) { o.classList.remove('active'); });
+  var activeOpt = document.querySelector('.ampm-option.opt-' + val.toLowerCase());
+  if (activeOpt) activeOpt.classList.add('active');
+  closeAmpmPanel();
+  updateTimeDisplay();
+}
+
+function setAmPmValue(val) {
+  selectAmpm(val);
+  closeAmpmPanel(); // ensure panel is closed on scenario reset
+}
+
+// ── Composed time ───────────────────────────────────────────────
+function getComposedTime() {
+  if (!hrValue || minValue === '') return '';
+  return hrValue + ':' + minValue + ' ' + ampmValue;
+}
+
+function isMinExact() {
+  if (minValue === '') return false;
+  return parseInt(minValue, 10) % 5 !== 0;
+}
+
+function updateTimeDisplay() {
+  var composed = getComposedTime();
+  var isExact  = isMinExact();
+  var badge    = document.getElementById('exactBadge');
+  var confirm  = document.getElementById('exactTimeConfirm');
+
+  if (composed && isExact) {
+    badge.classList.remove('hide');
+    if (currentScenario === 'type' && confirm) {
+      document.getElementById('confirmedTimeText').textContent = composed;
+      confirm.style.display = '';
+    }
+  } else {
+    badge.classList.add('hide');
+    if (confirm) confirm.style.display = 'none';
+  }
+}
+
+// ── Hr panel ───────────────────────────────────────────────────
+function renderHrOptions() {
+  var list   = document.getElementById('hrOptionList');
+  if (!list) return;
+  var typed  = document.getElementById('hrInput').value.trim();
+  var html   = '';
+  HR_OPTIONS.forEach(function(o) {
+    if (!typed || o.indexOf(typed) === 0) {
+      var sel = o === hrValue ? ' selected' : '';
+      html += '<div class="time-part-option' + sel + '" onmousedown="selectHr(\'' + o + '\')">' + o + '</div>';
+    }
+  });
+  if (!html) {
+    HR_OPTIONS.forEach(function(o) {
+      var sel = o === hrValue ? ' selected' : '';
+      html += '<div class="time-part-option' + sel + '" onmousedown="selectHr(\'' + o + '\')">' + o + '</div>';
+    });
+  }
+  list.innerHTML = html;
+  setTimeout(function() {
+    var sel = list.querySelector('.selected');
+    if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }, 20);
+}
+
+function openHrPanel() {
+  if (hrPanelOpen) return;
+  hrPanelOpen = true;
+  closeMinPanel();
+  document.getElementById('hrPanel').classList.add('open');
+  document.getElementById('hrChevron').className = 'fas fa-chevron-up';
+  document.getElementById('hrInputRow').classList.add('focused');
+  renderHrOptions();
+}
+
+function closeHrPanel() {
+  if (!hrPanelOpen) return;
+  hrPanelOpen = false;
+  document.getElementById('hrPanel').classList.remove('open');
+  document.getElementById('hrChevron').className = 'fas fa-chevron-down';
+}
+
+function toggleHrPanel(e) {
+  e.preventDefault();
+  if (hrPanelOpen) {
+    closeHrPanel();
+    document.getElementById('hrInputRow').classList.remove('focused');
+  } else {
+    openHrPanel();                               // open directly — don't rely on focus event
+    document.getElementById('hrInput').focus(); // focus for keyboard support
+  }
+}
+
+function selectHr(val) {
+  document.getElementById('hrInput').value = val;
+  hrValue = val;
+  closeHrPanel();
+  clearHrError();
+  updateTimeDisplay();
+  setTimeout(function() { document.getElementById('minInput').focus(); }, 60);
+}
+
+function onHrFocus() {
+  document.getElementById('hrInputRow').classList.add('focused');
+  document.getElementById('hrInputRow').classList.remove('invalid');
+  openHrPanel();
+}
+
+function onHrBlur() {
+  // Don't close panel here — document click handles it.
+  // Just clean up focus ring and validate.
+  setTimeout(function() {
+    document.getElementById('hrInputRow').classList.remove('focused');
+    validateHrOnBlur();
+  }, 0);
+}
+
+function onHrClick() {
+  openHrPanel(); // reopen if panel was closed while input still had focus
+}
+
+function onHrInput() {
+  document.getElementById('hrInputRow').classList.remove('invalid');
+  clearGlobalError();
+  renderHrOptions();
+}
+
+function onHrKeydown(e) {
+  if (e.key === 'Enter') {
+    var raw = document.getElementById('hrInput').value.trim();
+    var n   = parseInt(raw, 10);
+    if (!isNaN(n) && n >= 1 && n <= 12) { selectHr('' + n); }
+    e.preventDefault();
+  }
+  if (e.key === 'Tab') {
+    closeHrPanel();
+    document.getElementById('hrInputRow').classList.remove('focused');
+    validateHrOnBlur();
+  }
+  if (e.key === 'Escape') { closeHrPanel(); document.getElementById('hrInput').blur(); }
+}
+
+function validateHrOnBlur() {
+  var raw = document.getElementById('hrInput').value.trim();
+  if (raw === '') { hrValue = ''; clearHrError(); updateTimeDisplay(); return; }
+  var n = parseInt(raw, 10);
+  if (isNaN(n) || n < 1 || n > 12) {
+    showHrError();
+  } else {
+    hrValue = '' + n;
+    document.getElementById('hrInput').value = '' + n;
+    clearHrError();
+    updateTimeDisplay();
+  }
+}
+
+function showHrError() {
+  document.getElementById('hrInputRow').classList.add('invalid');
+  showError('Hr must be 1–12');
+}
+function clearHrError() { document.getElementById('hrInputRow').classList.remove('invalid'); }
+
+// ── Min panel ──────────────────────────────────────────────────
+function renderMinOptions() {
+  var list  = document.getElementById('minOptionList');
+  if (!list) return;
+  var typed = document.getElementById('minInput').value.trim();
+  var html  = '';
+
+  // Always show hint if user typed a non-5-min value
+  var filtered = MIN_OPTIONS.filter(function(o) {
+    return !typed || o.indexOf(typed) === 0 || (typed.length === 1 && o.indexOf('0' + typed) === 0);
+  });
+
+  if (filtered.length === 0) {
+    html += '<div class="time-part-option-hint">5-min increments:</div>';
+    MIN_OPTIONS.forEach(function(o) {
+      var sel = o === minValue ? ' selected' : '';
+      html += '<div class="time-part-option' + sel + '" onmousedown="selectMin(\'' + o + '\')">' + o + '</div>';
+    });
+  } else {
+    filtered.forEach(function(o) {
+      var sel = o === minValue ? ' selected' : '';
+      html += '<div class="time-part-option' + sel + '" onmousedown="selectMin(\'' + o + '\')">' + o + '</div>';
+    });
+  }
+
+  list.innerHTML = html;
+  setTimeout(function() {
+    var sel = list.querySelector('.selected');
+    if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }, 20);
+}
+
+function openMinPanel() {
+  if (minPanelOpen) return;
+  minPanelOpen = true;
+  closeHrPanel();
+  document.getElementById('minPanel').classList.add('open');
+  document.getElementById('minChevron').className = 'fas fa-chevron-up';
+  document.getElementById('minInputRow').classList.add('focused');
+  renderMinOptions();
+}
+
+function closeMinPanel() {
+  if (!minPanelOpen) return;
+  minPanelOpen = false;
+  document.getElementById('minPanel').classList.remove('open');
+  document.getElementById('minChevron').className = 'fas fa-chevron-down';
+}
+
+function toggleMinPanel(e) {
+  e.preventDefault();
+  if (minPanelOpen) {
+    closeMinPanel();
+    document.getElementById('minInputRow').classList.remove('focused');
+  } else {
+    openMinPanel();                               // open directly — don't rely on focus event
+    document.getElementById('minInput').focus(); // focus for keyboard support
+  }
+}
+
+function selectMin(val) {
+  document.getElementById('minInput').value = val;
+  minValue = val;
+  closeMinPanel();
+  clearMinError();
+  updateTimeDisplay();
+}
+
+function onMinFocus() {
+  document.getElementById('minInputRow').classList.add('focused');
+  document.getElementById('minInputRow').classList.remove('invalid');
+  openMinPanel();
+}
+
+function onMinBlur() {
+  setTimeout(function() {
+    document.getElementById('minInputRow').classList.remove('focused');
+    validateMinOnBlur();
+  }, 0);
+}
+
+function onMinClick() {
+  openMinPanel();
+}
+
+function onMinInput() {
+  document.getElementById('minInputRow').classList.remove('invalid');
+  clearGlobalError();
+  renderMinOptions();
+}
+
+function onMinKeydown(e) {
+  if (e.key === 'Enter') {
+    var raw = document.getElementById('minInput').value.trim();
+    var n   = parseInt(raw, 10);
+    if (!isNaN(n) && n >= 0 && n <= 59) { selectMin(n < 10 ? '0' + n : '' + n); }
+    e.preventDefault();
+  }
+  if (e.key === 'Tab') {
+    closeMinPanel();
+    document.getElementById('minInputRow').classList.remove('focused');
+    validateMinOnBlur();
+  }
+  if (e.key === 'Escape') { closeMinPanel(); document.getElementById('minInput').blur(); }
+}
+
+function validateMinOnBlur() {
+  var raw = document.getElementById('minInput').value.trim();
+  if (raw === '') { minValue = ''; clearMinError(); updateTimeDisplay(); return; }
+  var n = parseInt(raw, 10);
+  if (isNaN(n) || n < 0 || n > 59) {
+    showMinError();
+  } else {
+    var fmt = n < 10 ? '0' + n : '' + n;
+    minValue = fmt;
+    document.getElementById('minInput').value = fmt;
+    clearMinError();
+    updateTimeDisplay();
+  }
+}
+
+function showMinError() {
+  document.getElementById('minInputRow').classList.add('invalid');
+  showError('Min must be 00–59');
+}
+function clearMinError() { document.getElementById('minInputRow').classList.remove('invalid'); }
+
+// ── Shared error helpers ────────────────────────────────────────
+function clearGlobalError() {
+  document.getElementById('timeErrorMsg').classList.remove('show');
+  document.getElementById('validationBanner').style.display = 'none';
+}
+
+function showError(msg) {
+  document.getElementById('timeErrorText').textContent = msg;
+  document.getElementById('timeErrorMsg').classList.add('show');
+}
+
+function showAllDayWarning(show) {
+  document.getElementById('allDayWarning').style.display = show ? '' : 'none';
+}
+
+// ── Schedule button ────────────────────────────────────────────
+function handleSchedule() {
+  var hrInvalid  = document.getElementById('hrInputRow').classList.contains('invalid');
+  var minInvalid = document.getElementById('minInputRow').classList.contains('invalid');
+
+  if (hrInvalid || minInvalid) {
+    document.getElementById('validationBanner').style.display = '';
+    return;
+  }
+
+  var composed = getComposedTime();
+  if (!composed) {
+    showAllDayWarning(true);
+    return;
+  }
+
+  var btn  = document.getElementById('scheduleBtn');
+  var orig = btn.textContent;
+  btn.textContent = '✓ Scheduled';
+  btn.style.background = '#059669';
+  setTimeout(function() {
+    btn.textContent = orig;
+    btn.style.background = '';
+  }, 1800);
+}
+
+// ── Scenario switching ──────────────────────────────────────────
+function setScenario(name) {
+  currentScenario = name;
+  closeHrPanel();
+  closeMinPanel();
+
+  // Tabs
+  var tabs = document.querySelectorAll('.scenario-tab');
+  var map  = { type: 0, browse: 1, invalid: 2, clear: 3 };
+  tabs.forEach(function(el) { el.classList.remove('active'); });
+  if (tabs[map[name]]) tabs[map[name]].classList.add('active');
+
+  // Annotation panels
+  document.querySelectorAll('.scenario-panel').forEach(function(el) { el.classList.remove('active'); });
+  var annotEl = document.getElementById('annot-' + name);
+  if (annotEl) annotEl.classList.add('active');
+
+  // Reset banners
+  document.getElementById('allDayWarning').style.display    = 'none';
+  document.getElementById('exactTimeConfirm').style.display = 'none';
+  document.getElementById('validationBanner').style.display = 'none';
+  document.getElementById('exactBadge').classList.add('hide');
+  clearGlobalError();
+
+  // Reset field states
+  var hrInput  = document.getElementById('hrInput');
+  var minInput = document.getElementById('minInput');
+  var hrRow    = document.getElementById('hrInputRow');
+  var minRow   = document.getElementById('minInputRow');
+  hrRow.classList.remove('invalid', 'focused');
+  minRow.classList.remove('invalid', 'focused');
+
+  if (name === 'type') {
+    hrInput.value  = '';
+    minInput.value = '';
+    hrValue  = ''; minValue = '';
+    setAmPmValue('AM');
+    document.getElementById('incrementHint').style.display = '';
+
+  } else if (name === 'browse') {
+    hrInput.value  = '';
+    minInput.value = '';
+    hrValue  = ''; minValue = '';
+    setAmPmValue('AM');
+    document.getElementById('incrementHint').style.display = '';
+    setTimeout(function() { hrInput.focus(); }, 50);
+
+  } else if (name === 'invalid') {
+    hrInput.value  = '99';
+    minInput.value = '';
+    hrValue  = ''; minValue = '';
+    hrRow.classList.add('invalid');
+    showError('Hr must be 1–12');
+    document.getElementById('validationBanner').style.display = '';
+    document.getElementById('incrementHint').style.display = '';
+
+  } else if (name === 'clear') {
+    hrInput.value  = '';
+    minInput.value = '';
+    hrValue  = ''; minValue = '';
+    setAmPmValue('AM');
+    document.getElementById('incrementHint').style.display = '';
+    showAllDayWarning(true);
+  }
+}
+
+// ── Use date buttons ────────────────────────────────────────────
+function setDate(val) {
+  document.getElementById('apptDate').value = val;
+}
+
+// ── Close panels on outside click ──────────────────────────────
+document.addEventListener('click', function(e) {
+  var hrWrap   = document.getElementById('hrWrap');
+  var minWrap  = document.getElementById('minWrap');
+  var ampmWrap = document.getElementById('ampmWrap');
+  if (hrWrap && !hrWrap.contains(e.target) && hrPanelOpen) {
+    closeHrPanel();
+    document.getElementById('hrInputRow').classList.remove('focused');
+  }
+  if (minWrap && !minWrap.contains(e.target) && minPanelOpen) {
+    closeMinPanel();
+    document.getElementById('minInputRow').classList.remove('focused');
+  }
+  if (ampmWrap && !ampmWrap.contains(e.target) && ampmPanelOpen) {
+    closeAmpmPanel();
+  }
+});
+
+// ── Init ────────────────────────────────────────────────────────
+setScenario('type');
+</script>
+
+</body>
+</html>
