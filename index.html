@@ -1333,16 +1333,16 @@ function setScenario(name) {
   minRow.classList.remove('invalid', 'focused');
 
   if (name === 'type') {
-    hrInput.value  = '';
-    minInput.value = '';
-    hrValue  = ''; minValue = '';
+    hrInput.value  = '7';
+    minInput.value = '00';
+    hrValue  = '7'; minValue = '00';
     setAmPmValue('AM');
     document.getElementById('incrementHint').style.display = '';
 
   } else if (name === 'browse') {
-    hrInput.value  = '';
-    minInput.value = '';
-    hrValue  = ''; minValue = '';
+    hrInput.value  = '7';
+    minInput.value = '00';
+    hrValue  = '7'; minValue = '00';
     setAmPmValue('AM');
     document.getElementById('incrementHint').style.display = '';
     setTimeout(function() { hrInput.focus(); }, 50);
