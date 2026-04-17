@@ -190,6 +190,27 @@ body {
 }
 .time-part-toggle:hover { color: #7C3AED; }
 
+.time-part-display {
+  height: 36px; width: 52px;
+  border: 1px solid #d1d5db; border-radius: 6px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 6px 0 10px; cursor: pointer;
+  font-size: 14px; font-weight: 700; font-family: 'Nunito', sans-serif;
+  color: #1e1e2d; background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-user-select: none; user-select: none;
+}
+.time-part-display:hover { border-color: #a78bfa; }
+.time-part-display.open {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.08);
+}
+.time-part-display.invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+}
+.time-part-display i { font-size: 9px; color: #6b7280; }
+
 .time-colon {
   font-size: 18px; font-weight: 800; color: #374151;
   width: 14px; text-align: center;
@@ -544,20 +565,9 @@ code {
           <div class="time-split-row">
             <!-- Hour -->
             <div class="time-part-wrap" id="hrWrap">
-              <div class="time-part-input-row" id="hrInputRow">
-                <input
-                  class="time-part-input" id="hrInput"
-                  type="text" placeholder="--" maxlength="2"
-                  autocomplete="off"
-                  oninput="onHrInput()"
-                  onfocus="onHrFocus()"
-                  onblur="onHrBlur()"
-                  onclick="onHrClick()"
-                  onkeydown="onHrKeydown(event)"
-                >
-                <button type="button" class="time-part-toggle" tabindex="-1" aria-label="Toggle hour picker" onmousedown="toggleHrPanel(event)">
-                  <i class="fas fa-chevron-down" id="hrChevron"></i>
-                </button>
+              <div class="time-part-display" id="hrDisplay" onclick="toggleHrPanel()">
+                <span id="hrText">--</span>
+                <i class="fas fa-chevron-down" id="hrChevron"></i>
               </div>
               <div class="time-part-panel" id="hrPanel">
                 <div class="time-part-option-list" id="hrOptionList"></div>
@@ -991,6 +1001,12 @@ function isMinExact() {
 
 function updateTimeDisplay() {
   var composed = getComposedTime();
+  // When both fields are filled, clear any red-border + warning state
+  if (composed) {
+    document.getElementById('hrDisplay').classList.remove('invalid');
+    document.getElementById('minInputRow').classList.remove('invalid');
+    showAllDayWarning(false);
+  }
   var isExact  = isMinExact();
   var badge    = document.getElementById('exactBadge');
   var confirm  = document.getElementById('exactTimeConfirm');
@@ -1008,17 +1024,11 @@ function updateTimeDisplay() {
 }
 
 // ── Hr panel ───────────────────────────────────────────────────
-// filter=true only when user is actively typing; false = show all options
-function renderHrOptions(filter) {
-  var list  = document.getElementById('hrOptionList');
+function renderHrOptions() {
+  var list = document.getElementById('hrOptionList');
   if (!list) return;
-  var typed = filter ? document.getElementById('hrInput').value.trim() : '';
-  var opts  = HR_OPTIONS.filter(function(o) {
-    return !typed || o.indexOf(typed) === 0;
-  });
-  if (!opts.length) opts = HR_OPTIONS; // fallback: show all if no match
   var html = '';
-  opts.forEach(function(o) {
+  HR_OPTIONS.forEach(function(o) {
     var sel = o === hrValue ? ' selected' : '';
     html += '<div class="time-part-option' + sel + '" onmousedown="selectHr(\'' + o + '\')">' + o + '</div>';
   });
@@ -1033,10 +1043,11 @@ function openHrPanel() {
   if (hrPanelOpen) return;
   hrPanelOpen = true;
   closeMinPanel();
+  closeAmpmPanel();
   document.getElementById('hrPanel').classList.add('open');
   document.getElementById('hrChevron').className = 'fas fa-chevron-up';
-  document.getElementById('hrInputRow').classList.add('focused');
-  renderHrOptions(false); // show all on open
+  document.getElementById('hrDisplay').classList.add('open');
+  renderHrOptions();
 }
 
 function closeHrPanel() {
@@ -1044,88 +1055,22 @@ function closeHrPanel() {
   hrPanelOpen = false;
   document.getElementById('hrPanel').classList.remove('open');
   document.getElementById('hrChevron').className = 'fas fa-chevron-down';
+  document.getElementById('hrDisplay').classList.remove('open');
 }
 
-function toggleHrPanel(e) {
-  e.preventDefault();
-  if (hrPanelOpen) {
-    closeHrPanel();
-    document.getElementById('hrInputRow').classList.remove('focused');
-  } else {
-    openHrPanel();                               // open directly — don't rely on focus event
-    document.getElementById('hrInput').focus(); // focus for keyboard support
-  }
+function toggleHrPanel() {
+  if (hrPanelOpen) { closeHrPanel(); } else { openHrPanel(); }
 }
 
 function selectHr(val) {
-  document.getElementById('hrInput').value = val;
+  document.getElementById('hrText').textContent = val;
   hrValue = val;
   closeHrPanel();
-  clearHrError();
+  document.getElementById('hrDisplay').classList.remove('invalid');
+  clearGlobalError();
   updateTimeDisplay();
   setTimeout(function() { document.getElementById('minInput').focus(); }, 60);
 }
-
-function onHrFocus() {
-  document.getElementById('hrInputRow').classList.add('focused');
-  document.getElementById('hrInputRow').classList.remove('invalid');
-  openHrPanel();
-}
-
-function onHrBlur() {
-  // Don't close panel here — document click handles it.
-  // Just clean up focus ring and validate.
-  setTimeout(function() {
-    document.getElementById('hrInputRow').classList.remove('focused');
-    validateHrOnBlur();
-  }, 0);
-}
-
-function onHrClick() {
-  openHrPanel(); // reopen if panel was closed while input still had focus
-}
-
-function onHrInput() {
-  document.getElementById('hrInputRow').classList.remove('invalid');
-  clearGlobalError();
-  openHrPanel();
-  renderHrOptions(true); // filter while typing
-}
-
-function onHrKeydown(e) {
-  if (e.key === 'Enter') {
-    var raw = document.getElementById('hrInput').value.trim();
-    var n   = parseInt(raw, 10);
-    if (!isNaN(n) && n >= 1 && n <= 12) { selectHr('' + n); }
-    e.preventDefault();
-  }
-  if (e.key === 'Tab') {
-    closeHrPanel();
-    document.getElementById('hrInputRow').classList.remove('focused');
-    validateHrOnBlur();
-  }
-  if (e.key === 'Escape') { closeHrPanel(); document.getElementById('hrInput').blur(); }
-}
-
-function validateHrOnBlur() {
-  var raw = document.getElementById('hrInput').value.trim();
-  if (raw === '') { hrValue = ''; clearHrError(); updateTimeDisplay(); return; }
-  var n = parseInt(raw, 10);
-  if (isNaN(n) || n < 1 || n > 12) {
-    showHrError();
-  } else {
-    hrValue = '' + n;
-    document.getElementById('hrInput').value = '' + n;
-    clearHrError();
-    updateTimeDisplay();
-  }
-}
-
-function showHrError() {
-  document.getElementById('hrInputRow').classList.add('invalid');
-  showError('Hr must be 1–12');
-}
-function clearHrError() { document.getElementById('hrInputRow').classList.remove('invalid'); }
 
 // ── Min panel ──────────────────────────────────────────────────
 // filter=true only when user is actively typing; false = show all options
@@ -1273,16 +1218,18 @@ function showAllDayWarning(show) {
 
 // ── Schedule button ────────────────────────────────────────────
 function handleSchedule() {
-  var hrInvalid  = document.getElementById('hrInputRow').classList.contains('invalid');
   var minInvalid = document.getElementById('minInputRow').classList.contains('invalid');
 
-  if (hrInvalid || minInvalid) {
+  if (minInvalid) {
     document.getElementById('validationBanner').style.display = '';
     return;
   }
 
   var composed = getComposedTime();
   if (!composed) {
+    // Mark empty fields with red border
+    if (!hrValue)         { document.getElementById('hrDisplay').classList.add('invalid'); }
+    if (minValue === '')  { document.getElementById('minInputRow').classList.add('invalid'); }
     showAllDayWarning(true);
     return;
   }
@@ -1322,41 +1269,41 @@ function setScenario(name) {
   clearGlobalError();
 
   // Reset field states
-  var hrInput  = document.getElementById('hrInput');
-  var minInput = document.getElementById('minInput');
-  var hrRow    = document.getElementById('hrInputRow');
-  var minRow   = document.getElementById('minInputRow');
-  hrRow.classList.remove('invalid', 'focused');
+  var hrDisplay = document.getElementById('hrDisplay');
+  var hrText    = document.getElementById('hrText');
+  var minInput  = document.getElementById('minInput');
+  var minRow    = document.getElementById('minInputRow');
+  hrDisplay.classList.remove('invalid');
   minRow.classList.remove('invalid', 'focused');
 
   if (name === 'type') {
-    hrInput.value  = '7';
+    hrText.textContent = '7';
     minInput.value = '00';
-    hrValue  = '7'; minValue = '00';
+    hrValue = '7'; minValue = '00';
     setAmPmValue('AM');
     document.getElementById('incrementHint').style.display = '';
 
   } else if (name === 'browse') {
-    hrInput.value  = '7';
+    hrText.textContent = '7';
     minInput.value = '00';
-    hrValue  = '7'; minValue = '00';
+    hrValue = '7'; minValue = '00';
     setAmPmValue('AM');
     document.getElementById('incrementHint').style.display = '';
-    setTimeout(function() { hrInput.focus(); }, 50);
+    setTimeout(function() { openHrPanel(); }, 50);
 
   } else if (name === 'invalid') {
-    hrInput.value  = '99';
-    minInput.value = '';
-    hrValue  = ''; minValue = '';
-    hrRow.classList.add('invalid');
-    showError('Hr must be 1–12');
+    hrText.textContent = '--';
+    minInput.value = '99';
+    hrValue = ''; minValue = '';
+    minRow.classList.add('invalid');
+    showError('Min must be 0–59');
     document.getElementById('validationBanner').style.display = '';
     document.getElementById('incrementHint').style.display = '';
 
   } else if (name === 'clear') {
-    hrInput.value  = '';
+    hrText.textContent = '--';
     minInput.value = '';
-    hrValue  = ''; minValue = '';
+    hrValue = ''; minValue = '';
     setAmPmValue('AM');
     document.getElementById('incrementHint').style.display = '';
     showAllDayWarning(true);
@@ -1375,7 +1322,6 @@ document.addEventListener('click', function(e) {
   var ampmWrap = document.getElementById('ampmWrap');
   if (hrWrap && !hrWrap.contains(e.target) && hrPanelOpen) {
     closeHrPanel();
-    document.getElementById('hrInputRow').classList.remove('focused');
   }
   if (minWrap && !minWrap.contains(e.target) && minPanelOpen) {
     closeMinPanel();
