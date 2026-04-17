@@ -1011,23 +1011,20 @@ function updateTimeDisplay() {
 }
 
 // ── Hr panel ───────────────────────────────────────────────────
-function renderHrOptions() {
-  var list   = document.getElementById('hrOptionList');
+// filter=true only when user is actively typing; false = show all options
+function renderHrOptions(filter) {
+  var list  = document.getElementById('hrOptionList');
   if (!list) return;
-  var typed  = document.getElementById('hrInput').value.trim();
-  var html   = '';
-  HR_OPTIONS.forEach(function(o) {
-    if (!typed || o.indexOf(typed) === 0) {
-      var sel = o === hrValue ? ' selected' : '';
-      html += '<div class="time-part-option' + sel + '" onmousedown="selectHr(\'' + o + '\')">' + o + '</div>';
-    }
+  var typed = filter ? document.getElementById('hrInput').value.trim() : '';
+  var opts  = HR_OPTIONS.filter(function(o) {
+    return !typed || o.indexOf(typed) === 0;
   });
-  if (!html) {
-    HR_OPTIONS.forEach(function(o) {
-      var sel = o === hrValue ? ' selected' : '';
-      html += '<div class="time-part-option' + sel + '" onmousedown="selectHr(\'' + o + '\')">' + o + '</div>';
-    });
-  }
+  if (!opts.length) opts = HR_OPTIONS; // fallback: show all if no match
+  var html = '';
+  opts.forEach(function(o) {
+    var sel = o === hrValue ? ' selected' : '';
+    html += '<div class="time-part-option' + sel + '" onmousedown="selectHr(\'' + o + '\')">' + o + '</div>';
+  });
   list.innerHTML = html;
   setTimeout(function() {
     var sel = list.querySelector('.selected');
@@ -1042,7 +1039,7 @@ function openHrPanel() {
   document.getElementById('hrPanel').classList.add('open');
   document.getElementById('hrChevron').className = 'fas fa-chevron-up';
   document.getElementById('hrInputRow').classList.add('focused');
-  renderHrOptions();
+  renderHrOptions(false); // show all on open
 }
 
 function closeHrPanel() {
@@ -1094,7 +1091,8 @@ function onHrClick() {
 function onHrInput() {
   document.getElementById('hrInputRow').classList.remove('invalid');
   clearGlobalError();
-  renderHrOptions();
+  openHrPanel();
+  renderHrOptions(true); // filter while typing
 }
 
 function onHrKeydown(e) {
@@ -1133,18 +1131,19 @@ function showHrError() {
 function clearHrError() { document.getElementById('hrInputRow').classList.remove('invalid'); }
 
 // ── Min panel ──────────────────────────────────────────────────
-function renderMinOptions() {
+// filter=true only when user is actively typing; false = show all options
+function renderMinOptions(filter) {
   var list  = document.getElementById('minOptionList');
   if (!list) return;
-  var typed = document.getElementById('minInput').value.trim();
+  var typed = filter ? document.getElementById('minInput').value.trim() : '';
   var html  = '';
 
-  // Always show hint if user typed a non-5-min value
   var filtered = MIN_OPTIONS.filter(function(o) {
     return !typed || o.indexOf(typed) === 0 || (typed.length === 1 && o.indexOf('0' + typed) === 0);
   });
 
-  if (filtered.length === 0) {
+  if (!filtered.length) {
+    // Typed a non-5-min value — show hint + full list
     html += '<div class="time-part-option-hint">5-min increments:</div>';
     MIN_OPTIONS.forEach(function(o) {
       var sel = o === minValue ? ' selected' : '';
@@ -1171,7 +1170,7 @@ function openMinPanel() {
   document.getElementById('minPanel').classList.add('open');
   document.getElementById('minChevron').className = 'fas fa-chevron-up';
   document.getElementById('minInputRow').classList.add('focused');
-  renderMinOptions();
+  renderMinOptions(false); // show all on open
 }
 
 function closeMinPanel() {
@@ -1220,7 +1219,8 @@ function onMinClick() {
 function onMinInput() {
   document.getElementById('minInputRow').classList.remove('invalid');
   clearGlobalError();
-  renderMinOptions();
+  openMinPanel();
+  renderMinOptions(true); // filter while typing
 }
 
 function onMinKeydown(e) {
